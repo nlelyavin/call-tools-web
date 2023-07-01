@@ -2,24 +2,34 @@
 import os
 from typing import Optional
 
-from django.core import serializers
 from django.core.paginator import Paginator, EmptyPage
+from django.db.models import Prefetch
 
-from app.models import Article
+from app.models import Article, Comment
 
 PAGE_SIZE = os.environ.get('ARTICLE_PAGE_SIZE', 100)
 
 
-def get_article(article_id: int) -> Optional[Article]:
+def get_article_with_comments(article_id: int) -> (Optional[Article], Optional[list]):
     """Получение статьи по ее ID"""
 
-    try:
-        article = Article.objects.get(id=article_id)
-        article = article.to_dict()
-    except Article.DoesNotExist:
-        article = None
+    article = None
+    comments = None
+    comment_fields = ('created_at', 'text', 'article_id', 'author_id')
 
-    return article
+    # Как будет выглядеть запрос для получения комментариев (Здесь он еще не исполняется)
+    comment_queryset = Comment.objects.only(*comment_fields)
+    prefetch = Prefetch(lookup='comment_set', queryset=comment_queryset)
+
+    try:
+        article_and_comments = Article.objects.prefetch_related(prefetch).get(id=article_id)
+    except Article.DoesNotExist:
+        return article, comments
+
+    article = article_and_comments.to_dict()
+    comments = list(article_and_comments.comment_set.values(*comment_fields))
+
+    return article, comments
 
 
 def get_articles_by_page(page: int) -> list:
@@ -32,5 +42,5 @@ def get_articles_by_page(page: int) -> list:
         page_info = paginator.page(page)
     except EmptyPage:
         return list()
-
+    print(page_info.object_list)
     return list(page_info)

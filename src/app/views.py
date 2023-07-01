@@ -2,23 +2,22 @@ from django.http import JsonResponse
 from django.views.generic import View
 
 from app.constants import OBJECT_NOT_FOUND
-from app.service import get_article, get_articles_by_page
+from app.service import get_article_with_comments, get_articles_by_page
 
 
 class ArticleView(View):
     """View описывающая CRUD для модели Article"""
 
     def get(self, request, pk, *args, **kwargs):
-        """Получение статьи"""
+        """Получение статьи с комментариями"""
 
-        # Если ищем конкретную статью
+        article, comments = None, None
+
         if pk:
-            article = get_article(article_id=pk)
-        else:
-            article = None
+            article, comments = get_article_with_comments(article_id=pk)
 
         if article:
-            result = JsonResponse({'article': article})
+            result = JsonResponse({'article': article, 'comments': comments})
         else:
             result = JsonResponse(OBJECT_NOT_FOUND, status=404)
 
