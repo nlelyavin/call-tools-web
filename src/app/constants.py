@@ -1,0 +1,1 @@
+OBJECT_NOT_FOUND = {'ERROR': 'Object not found'}
