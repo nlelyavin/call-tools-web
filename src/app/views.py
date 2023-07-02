@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.generic import View
 
 from app.constants import OBJECT_NOT_FOUND
+from app.forms import ArticleForm
 from app.service import get_article_with_comments, get_articles_by_page
 
 
@@ -24,7 +25,12 @@ class ArticleView(View):
         return result
 
     def post(self, request, *args, **kwargs):
-        ...
+        """Создание статьи"""
+
+        form = ArticleForm(data=request.POST)
+
+        if form.is_valid():
+            return JsonResponse({'Success': 's'})
 
 
 class ArticlesView(View):
